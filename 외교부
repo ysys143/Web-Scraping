@@ -1,0 +1,68 @@
+## Clear memory
+rm(list=ls())
+
+
+# 비공개 문서목록
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+
+
+## Case 1. 2019년도
+
+## rvest method
+baseURL2019 <- "http://theme.archives.go.kr/next/closed/page/orgListClosedCommon.do?orgnz_id=108029&gubun=80&viewPage=ClosedList2017&listSize=1000"
+res2019 <- read_html(baseURL2019)
+
+Sys.setlocale("LC_ALL", "C")
+tab <- res2019 %>% 
+  html_table(fill=TRUE) %>% 
+  .[[5]]
+Sys.setlocale("LC_ALL", "Korean")
+
+txt <- toString(res2019)
+writeLines(txt, "check.html")
+
+
+df <- tab %>% slice(-1)
+names(df) <- c("v1", "v2", "v3", "v4", "v5", "v6", "v7")
+
+View(df)
+
+mofa_list <- df 
+write_xlsx(mofa_list,"2019_외교부_공개목록.xlsx")
+
+
+
+## 2018년도
+rm(list=ls())
+
+mofa.r <- "http://theme.archives.go.kr/next/closed/page/ReadClosedCommon.do?yr=2018"
+
+mofa.ua <- "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.135 Safari/537.36"
+
+baseURL <- "http://theme.archives.go.kr/next/closed/page/orgListClosedCommon.do?orgnz_id=108029&gubun=80&viewPage=ClosedList2017&listSize=1000"
+
+res <- GET(baseURL, add_headers(referer=mofa.r, user_agent=mofa.ua))
+doc <- toString(res)
+
+str(res)
+
+Sys.setlocale("LC_ALL", "C")
+tab <- res %>% 
+  html_table(fill=TRUE) %>% 
+  .[[5]]
+Sys.setlocale("LC_ALL", "Korean")
+
+df <- tab %>% slice(-1)
+names(df) <- c("v1", "v2", "v3", "v4", "v5", "v6", "v7")
+
+View(df)
+
+mofa_list <- df 
+write_xlsx(mofa_list,"2018_외교부_공개목록.xlsx")
+
