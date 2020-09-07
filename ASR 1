@@ -1,0 +1,169 @@
+## Clear memory
+rm(list=ls())
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+
+####### 최신호 논문 리스트 및 초록 뽑기 #######
+
+# 논문 리스트 가져오기
+
+URL <- "https://journals.sagepub.com/toc/asra/85/4"
+res <- read_html(URL)
+
+pattern <- ".hlFld-Title"
+title <- res %>% html_nodes(pattern) %>% html_text()
+
+pattern <- "div.art_title.linkable > a"
+link <- res %>% 
+  html_nodes(pattern) %>% 
+  html_attr("href") %>% 
+  str_c("https://journals.sagepub.com", .)
+
+
+# 개별 논문 추출하기
+
+URL2 <- link[2]
+res <- read_html(URL2)
+
+pattern <- ".abstractInFull p"
+abstract <- res %>% html_nodes(pattern) %>% html_text()
+
+table <- cbind(title, link) %>% as_tibble()
+View(table)
+
+
+# 전체 논문 초록 가져오기
+
+abstract <- NULL
+
+for ( i in 1:6) {
+  
+  URL2 <- link[i]
+  res <- read_html(URL2)
+  
+  pattern <- ".abstractInFull p"
+  e1 <- res %>% html_nodes(pattern) %>% html_text()
+  
+  abstract <- c(abstract, e1)
+  if (length(abstract)==0) abstract <- "N/A"
+  
+  Sys.sleep(1)
+}
+
+abstract
+
+table <- cbind(title, link, abstract) %>% as.data.frame()
+View(table)
+
+
+
+####### 다른호 논문 리스트 및 초록 뽑기 #######
+
+
+rm(list=ls())
+
+# 논문 리스트 가져오기
+
+volume <- 85
+issue <- 3
+
+URL <- str_c("https://journals.sagepub.com/toc/asra/",volume, "/",issue)
+res <- read_html(URL)
+
+pattern <- ".hlFld-Title"
+title <- res %>% html_nodes(pattern) %>% html_text()
+
+pattern <- "div.art_title.linkable > a"
+link <- res %>% 
+  html_nodes(pattern) %>% 
+  html_attr("href") %>% 
+  str_c("https://journals.sagepub.com", .)
+
+
+## 전체 논문 초록 가져오기
+
+abstract <- NULL
+n.item <- length(link)
+
+for ( i in 1:n.item) {
+  
+  URL2 <- link[i]
+  res <- read_html(URL2)
+  
+  pattern <- ".abstractInFull p"
+  e1 <- res %>% html_nodes(pattern) %>% html_text()
+  
+  abstract <- c(abstract, e1)
+  
+  if (i%%2==1) Sys.sleep(1)
+}
+
+table <- cbind(title, link, abstract) %>% as.data.frame
+
+
+
+####### 여러호 논문 리스트 및 초록 뽑기 #######
+
+rm(list=ls())
+
+Stack <- NULL
+i<-NULL
+
+volume <- 85
+
+
+for ( i in 1:4 ) {
+  
+  issue <- i
+  str_c("issue ", issue, " in processing") %>% print()
+  
+  # 논문 리스트 가져오기
+  
+  URL <- str_c("https://journals.sagepub.com/toc/asra/",volume, "/",issue)
+  res <- read_html(URL)
+  
+  pattern <- ".hlFld-Title"
+  title <- res %>% html_nodes(pattern) %>% html_text()
+  
+  pattern <- "div.art_title.linkable > a"
+  link <- res %>% 
+    html_nodes(pattern) %>% 
+    html_attr("href") %>% 
+    str_c("https://journals.sagepub.com", .)
+  
+  
+  ## 전체 논문 초록 가져오기
+  
+  abstract <- NULL
+  n.item <- length(link)
+  
+  for ( i in 1:n.item) {
+    
+    str_c("issue ", issue, " article ", i, " in processing") %>% print()
+    
+    URL2 <- link[i]
+    res <- read_html(URL2)
+    
+    pattern <- ".abstractInFull p"
+    e1 <- res %>% html_nodes(pattern) %>% html_text()
+    
+    abstract <- c(abstract, e1)
+    
+    if (i%%2==1) Sys.sleep(1)
+  }
+  
+  table <- cbind(title, volume, issue, link, abstract) %>% 
+    as.data.frame()
+  
+  Stack <- rbind(Stack,table)
+  
+}
+
+
+View(Stack)
+
