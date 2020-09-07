@@ -1,0 +1,179 @@
+## Clear memory
+rm(list=ls())
+
+
+# RISS
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+
+
+######################## 첫번째 페이지 결과 모으기 ######################## 
+
+## rvest method
+# RISS에서 '아베' 키워드를 넣은 결과 
+
+baseURL <- "http://www.riss.kr/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&strQuery=%EC%95%84%EB%B2%A0&order=%2FDESC&onHanja=false&strSort=DATE&iStartCount=100&fsearchMethod=search&sflag=1&isFDetailSearch=N&icate=bib_t&colName=bib_t&pageScale=100&isTab=Y&query=%EC%95%84%EB%B2%A0"
+
+res <- read_html(baseURL)
+
+## title
+title <- res %>% html_nodes('p.title>a') %>% 
+  html_text()
+
+# author
+author <- res %>% html_nodes('span.writer>a') %>% 
+  html_text()
+
+# assigned
+assigned <- res %>% html_nodes('span.assigned>a') %>% 
+  html_text()
+
+# year
+year <- res %>% html_nodes('span.assigned+ span') %>% 
+  html_text()
+
+# degree
+degree <- res %>% html_nodes('span.assigned~ span+ span') %>% 
+  html_text()
+
+### link
+link <- res %>% html_nodes("p.title>a") %>% 
+  html_attr("href") %>% 
+  str_c("http://www.riss.kr/", .)
+
+
+# 테이블 작성
+table <- cbind(title, author, assigned, year, degree, link) %>% as_tibble()
+# View(table)
+
+
+
+######################## 전체 논문 목록 ######################## 
+
+n.page<-3
+
+Stack = NULL
+
+for (i in 1:n.page) {
+  
+  print(paste("page ",i," being processed"))
+  
+  baseURL <- str_c("http://www.riss.kr/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&strQuery=%EC%95%84%EB%B2%A0&order=%2FDESC&onHanja=false&strSort=DATE&iStartCount=", i-1, "00&fsearchMethod=search&sflag=1&isFDetailSearch=N&icate=bib_t&colName=bib_t&pageScale=100&isTab=Y&query=%EC%95%84%EB%B2%A0")
+  
+
+  res <- read_html(baseURL)
+  
+  ## title
+  title <- res %>% html_nodes('p.title>a') %>% html_text()
+    
+  # author
+  author <- res %>% html_nodes('span.writer>a') %>% html_text()
+  
+  # assigned
+  assigned <- res %>% html_nodes('span.assigned>a') %>% html_text()
+  
+  # year
+  year <- res %>% html_nodes('span.assigned+ span') %>% html_text()
+  
+  # degree
+  degree <- res %>% html_nodes('span.assigned~ span+ span') %>% html_text()
+  
+  ### link
+  link <- res %>% html_nodes("p.title>a") %>% 
+  html_attr("href") %>% 
+  str_c("http://www.riss.kr/", .)
+
+  tab <- data.frame(cbind(title, author, assigned, year, degree, link))
+  
+  Stack <- rbind(Stack,tab)
+  
+  Sys.sleep(1)
+  
+}
+
+# View(Stack)
+# write_xlsx(Stack,"Abe_list_0818.xlsx")
+
+
+
+
+
+######################## 개별 논문 페이지 ######################## 
+
+baseURL2 <- "http://www.riss.kr/search/detail/DetailView.do?p_mat_type=be54d9b8bc7cdb09&control_no=31f983dfc02a9673ffe0bdc3ef48d419"
+
+txt <- readLines(baseURL2, encoding = "UTF-8")
+
+res <- GET(baseURL2) # 한 번 불러올때는 contents가 따라오지 않는 경우가 생김, 서버가 다소 불안정한 것으로 보임
+res <- GET(baseURL2) # 안전하게 두 번 불러와서 length를 체크하고 다음 단계로 진행하는 것이 필요해보임.
+res <- GET(baseURL2) # 안전하게 두 번 불러와서 length를 체크하고 다음 단계로 진행하는 것이 필요해보임.
+
+pattern <- "#abs1"
+res %>% read_html() %>% 
+  html_nodes(pattern) %>% 
+  html_text() %>% 
+  str_trim()
+
+pattern <- "#abs2"
+res %>% read_html() %>% 
+  html_nodes(pattern) %>% 
+  html_text() %>% 
+  str_trim()
+
+
+
+
+######################## 개별 논문 페이지 방문 ######################## 
+
+length(Stack$link)
+list.number <- length(Stack$link)
+
+Stack2 <- NULL
+
+for (i in 1:list.number ){
+  
+  baseURL2 <- Stack$link[i]
+  
+  print(paste("page ",i," being processed"))
+  
+  txt <- readLines(baseURL2, encoding = "UTF-8")
+  
+  res <- GET(baseURL2) # 한 번 불러올때는 contents가 따라오지 않는 경우가 생김, 서버가 다소 불안정한 것으로 보임
+  res <- GET(baseURL2) # 안전하게 두 번 불러와서 length를 체크하고 다음 단계로 진행하는 것이 필요해보임.
+  res <- GET(baseURL2) # 안전하게 두 번 불러와서 length를 체크하고 다음 단계로 진행하는 것이 필요해보임.
+  
+  pattern <- "#abs1"
+  abstract1 <- res %>% 
+    read_html() %>% 
+    html_nodes(pattern) %>% 
+    html_text() %>% 
+    str_trim()
+  
+  pattern <- "#abs2"
+  abstract2 <- res %>% 
+    read_html() %>% 
+    html_nodes(pattern) %>% 
+    html_text() %>% 
+    str_trim()
+  
+  abstract1
+  abstract2
+  
+  abtract1
+  
+  tab2 <- data.frame(cbind(abstract1, abstract2))
+  
+  Stack2 <- rbind(Stack2,tab2)
+  
+  Sys.sleep(1)
+  
+}
+
+Stack3 <- cbind(Stack1, Stack2)
+
+View(Stack)
