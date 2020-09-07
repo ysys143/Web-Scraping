@@ -1,0 +1,13 @@
+
+# 참고하실 사항입니다.
+
+doc <- toString(res) ## Alt + "-"
+doc
+writeLines(doc, "check.html")
+
+Ctrl + Enter
+Ctrl + Shift + K
+Ctrl + Shift + M
+Alt + "-"
+Ctrl + Shift + C
+
