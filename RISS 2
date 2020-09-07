@@ -1,0 +1,52 @@
+## Clear memory
+rm(list=ls())
+
+
+# RISS
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+
+
+## Case 1. Extract names of speakers from the first page.
+
+## rvest method
+baseURL <- "http://www.riss.kr/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&queryText=&strQuery=%EC%95%84%EB%B2%A0+%EC%8B%A0%EC%A1%B0&exQuery=&exQueryText=&order=%2FDESC&onHanja=false&strSort=DATE&p_year1=&p_year2=&iStartCount=0&orderBy=&fsearchMethod=search&sflag=1&isFDetailSearch=N&pageNumber=1&resultKeyword=&fsearchSort=&fsearchOrder=&limiterList=&limiterListText=&facetList=&facetListText=&fsearchDB=&icate=bib_t&colName=bib_t&pageScale=100&isTab=Y&regnm=&dorg_storage=&language=&language_code=&query=%EC%95%84%EB%B2%A0+"
+#아베 
+res <- read_html(baseURL)
+
+## title
+
+## xpath
+pattern <- "//*[@id='divContent']/div[2]/div/div[2]/div[2]/ul/li/div[2]/p[1]"
+res %>% html_nodes(xpath=pattern) %>% 
+  html_text()
+#html_text(html_nodes(res, xpath=pattern))
+
+
+## css selector using selector gadget
+pattern <- "p.title>a"
+title <- res %>% html_nodes(pattern) %>% 
+  html_text()
+
+
+# author
+
+## xpath
+pattern <- "//*['@id=divContent']/div[2]/div/div[2]/div[2]/ul/li/div[2]/p[2]/span[1]/a"
+res %>% html_nodes(xpath=pattern) %>% 
+  html_text()
+
+## css selector using selector gadget
+pattern2 <- "span.writer>a"
+author <- res %>% html_nodes(pattern2) %>% 
+  html_text()
+
+
+table <- cbind(title, author) %>% as_tibble()
+View(table)
+
