@@ -1,0 +1,70 @@
+####### 여러호 논문 리스트 및 초록 뽑기 #######
+
+rm(list=ls())
+
+Stack <- NULL
+volume <- NULL
+issue <- NULL
+
+
+for ( i in 84:84) {
+  
+  volume <- i
+  str_c("volume ", volume, " in processing") %>% print()
+  
+  for ( j in 1:6 ) {
+    
+    issue <- j
+    str_c("volume ", volume, " issue ", issue, " in processing") %>% print()
+    
+    # 논문 리스트 가져오기
+    
+    URL <- str_c("https://journals.sagepub.com/toc/asra/",volume, "/",issue)
+    res <- read_html(URL)
+    
+    pattern <- ".hlFld-Title"
+    title <- res %>% html_nodes(pattern) %>% html_text()
+    
+    pattern <- "div.art_title.linkable > a"
+    link <- res %>% 
+      html_nodes(pattern) %>% 
+      html_attr("href") %>% 
+      str_c("https://journals.sagepub.com", .)
+    
+    
+    ## 전체 논문 초록 가져오기
+    
+    abstract <- NULL
+    n.item <- length(link)
+    
+    for ( k in 1:n.item) {
+      
+      str_c("volume ", volume, " issue ", issue, " article ", k, " in processing") %>% print()
+      
+      URL2 <- link[k]
+      res <- read_html(URL2)
+      
+      pattern <- ".abstractInFull p"
+      e1 <- res %>% html_nodes(pattern) %>% html_text()
+      if (length(e1)==0) e1 <- "N/A"
+      
+      abstract <- c(abstract, e1)
+      
+      if (i%%2==1) Sys.sleep(1)
+    }
+    
+    table <- cbind(volume, issue, title, link, abstract) %>% 
+      as.data.frame()
+    
+    Stack <- rbind(Stack,table)
+    
+  }
+
+}  
+
+print("done")
+
+View(Stack)
+write_xlsx(Stack,"ASR_Abstract.xlsx")
+
+
