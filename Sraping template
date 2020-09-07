@@ -1,0 +1,24 @@
+## Clear memory
+rm(list=ls())
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+URL <- " "
+res <- read_html(URL)
+
+pattern <- ""
+title <- res %>% 
+  html_nodes(pattern) %>% 
+  html_text()
+
+pattern <- ""
+link <- res %>% 
+  html_nodes(pattern) %>% 
+  html_attr("href")
+
+table <- cbind(title, link) %>% as_tibble()
+View(table)
