@@ -1,0 +1,122 @@
+## Clear memory
+rm(list=ls())
+
+
+# RISS
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+
+
+######################## 첫번째 페이지 결과 모으기 ######################## 
+
+## rvest method
+# RISS에서 '아베' 키워드를 넣은 결과 
+
+baseURL <- "http://www.riss.kr/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&strQuery=%EC%95%84%EB%B2%A0&order=%2FDESC&onHanja=false&strSort=DATE&iStartCount=100&fsearchMethod=search&sflag=1&isFDetailSearch=N&icate=bib_t&colName=bib_t&pageScale=100&isTab=Y&query=%EC%95%84%EB%B2%A0"
+
+res <- read_html(baseURL)
+
+## title
+title <- res %>% html_nodes('p.title>a') %>% 
+  html_text()
+
+# author
+author <- res %>% html_nodes('span.writer>a') %>% 
+  html_text()
+
+# assigned
+assigned <- res %>% html_nodes('span.assigned>a') %>% 
+  html_text()
+
+# year
+year <- res %>% html_nodes('span.assigned+ span') %>% 
+  html_text()
+
+# degree
+degree <- res %>% html_nodes('span.assigned~ span+ span') %>% 
+  html_text()
+
+### link
+link <- res %>% html_nodes("p.title>a") %>% 
+  html_attr("href") %>% 
+  str_c("http://www.riss.kr/", .)
+
+
+# 테이블 작성
+table <- cbind(title, author, assigned, year, degree, link) %>% as_tibble()
+View(table)
+
+
+######################## 개별 논문 페이지 ######################## 
+
+# baseURL2 <- link[1]
+baseURL2 <- "http://www.riss.kr/search/detail/DetailView.do?p_mat_type=be54d9b8bc7cdb09&control_no=31f983dfc02a9673ffe0bdc3ef48d419"
+
+
+# xpath
+res2 <- read_html(baseURL2)
+pattern <- ".//*[@id='soptionview']/div/div[2]/div[1]/div/div[1]/div[2]/p/text()"
+
+res2 %>% html_nodes(xpath=pattern) %>% html_text()
+abs1 <- res2 %>% html_nodes(xpath=pattern) %>% html_text()
+
+
+# CSS
+res2 <- read_html(baseURL2)
+pattern <- ".on:nth-child(9) p"
+
+res2 %>% html_nodes(pattern) %>% html_text()
+abs1 <- res2 %>% html_nodes(pattern) %>% html_text()
+
+# -> 둘 다 제대로 작동이 안됨
+
+
+
+
+######################## 첫번째 페이지 결과 모으기 ######################## 
+
+n.page<-3
+
+Stack = NULL
+
+for (i in 1:n.page) {
+  
+  print(paste("Downloading page",i,"is starting"))
+  
+  baseURL <- str_c("http://www.riss.kr/search/Search.do?isDetailSearch=N&searchGubun=true&viewYn=OP&strQuery=%EC%95%84%EB%B2%A0&order=%2FDESC&onHanja=false&strSort=DATE&iStartCount=", i-1, "00&fsearchMethod=search&sflag=1&isFDetailSearch=N&icate=bib_t&colName=bib_t&pageScale=100&isTab=Y&query=%EC%95%84%EB%B2%A0")
+  
+
+  res <- read_html(baseURL)
+  
+  ## title
+  title_x <- res %>% html_nodes('p.title>a') %>% html_text()
+    
+  # author
+  author_x <- res %>% html_nodes('span.writer>a') %>% html_text()
+  
+  # assigned
+  assigned_x <- res %>% html_nodes('span.assigned>a') %>% html_text()
+  
+  # year
+  year_x <- res %>% html_nodes('span.assigned+ span') %>% html_text()
+  
+  # degree
+  degree_x <- res %>% html_nodes('span.assigned~ span+ span') %>% html_text()
+  
+  ### link
+  link_x <- res %>% html_nodes("p.title>a") %>% 
+  html_attr("href") %>% 
+  str_c("http://www.riss.kr/", .)
+  
+  Sys.sleep(1)
+  
+}
+
+# 테이블 작성
+table <- cbind(title, author, assigned, year, degree, link) %>% as_tibble()
+View(table)
