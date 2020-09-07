@@ -1,0 +1,25 @@
+rm(list=ls())
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+pg_number <- NULL
+
+for ( pg_number in 1:3 ) {
+
+print(str_c("downloading page number ", pg_number))
+  
+year <- 2019
+month <- 7
+week <- 1
+
+URL <- str_c("http://www.yes24.com/24/category/bestseller?CategoryNumber=001&sumgb=08&year=2019&month=7&week=1&dayURLFetchSize=40&PageNumber=", pg_number,"?CategoryNumber=001&sumgb=08&year=", year, "&month=", month, "&week=", week, "&day=1&FetchSize=40")
+
+outfile <- str_c("yes24 종합", year, "_", month, "_", week, "_", pg_number,".xls")
+
+download.file(URL, outfile)
+
+}
