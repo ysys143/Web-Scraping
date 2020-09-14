@@ -1,0 +1,44 @@
+## Clear memory
+rm(list=ls())
+
+library(rvest)
+library(XML)
+library(dplyr)
+library(stringr)
+library(writexl)
+
+# 첫번째 페이지
+
+baseURL <- "http://www.donggu.go.kr/gyeyak/gyeyak/contents/gyeyak/contract/05/contract.05.001.motion?bmode=list&pageIndex=1&ctrtAcctBookMngNo=&ctrtGovNm=&ctrtNm=&custNm="
+res <- read_html(baseURL)
+table <- res %>% html_nodes(xpath="//*[@id='bbs']/table[2]") %>% html_table()
+t_table2 <- table[1]
+t_table2
+
+
+# 전체 목록 수집
+rm(list=ls())
+
+n.page<-276
+Stack = NULL
+
+
+for (i in 1:n.page) {
+  
+  print(paste("page ",i," being processed"))
+  
+  baseURL <- str_c("http://www.donggu.go.kr/gyeyak/gyeyak/contents/gyeyak/contract/05/contract.05.001.motion?bmode=list&pageIndex=", i, "&ctrtAcctBookMngNo=&ctrtGovNm=&ctrtNm=&custNm=")
+  res <- read_html(baseURL)
+  table <- res %>% html_nodes(xpath="//*[@id='bbs']/table[2]") %>% html_table()
+  t_table <- table[1]
+  
+  tab <- data.frame(t_table)
+  Stack <- rbind(Stack,tab)
+  
+  Sys.sleep(1)
+  
+}  
+
+
+View(Stack)
+write_xlsx(Stack,"대전동구_공사수의계약_현황목록.xlsx")
